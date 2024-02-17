@@ -18,13 +18,13 @@ def get_or_create_hyperlink_style(d):
             ds.element.set(docx.oxml.shared.qn('w:default'), "1")
             ds.priority = 1
             ds.hidden = True
-            ds.unhide_when_used = True
+            ds.unhide_when_used = False
             del ds
         hs = d.styles.add_style("Hyperlink",
                                 docx.enum.style.WD_STYLE_TYPE.CHARACTER,
                                 True)
         hs.base_style = d.styles["Default Character Font"]
-        hs.unhide_when_used = True
+        hs.unhide_when_used = False
         hs.font.color.rgb = docx.shared.RGBColor(0x05, 0x63, 0xC1)
         hs.font.underline = True
         del hs
