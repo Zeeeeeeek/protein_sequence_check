@@ -54,8 +54,9 @@ def compare2(a, b):
             res.append(('RED', s[-1]))
     return res
 
-def write_docx(path,  errors: List[Tuple[str, Tuple[str, str]]]):
+def write_docx(path, errors: List[Tuple[str, Tuple[str, str]]], missing):
     doc = Document()
+    doc.add_heading('RepeatsDB Structure Checker', level=1)
     for region_id, (a, b) in errors:
         h = doc.add_heading(level=3)
         add_hyperlink(h,
@@ -72,4 +73,15 @@ def write_docx(path,  errors: List[Tuple[str, Tuple[str, str]]]):
             elif color.upper() == 'BLACK':
                 run.font.color.rgb = BLACK
         doc.add_paragraph()
+    if missing:
+        doc.add_heading('Missing chains', level=2)
+        for m in missing:
+            p = doc.add_paragraph(m)
+            add_hyperlink(p, "Check PDB", f"https://repeatsdb.bio.unipd.it/structure/{m}")
+    if errors or missing:
+        doc.add_heading('Summary', level=2)
+        if errors:
+            doc.add_paragraph(f"Errors found: {len(errors)}")
+        if missing:
+            doc.add_paragraph(f"Missing chains: {len(missing)}")
     doc.save(path)
