@@ -1,23 +1,9 @@
-import difflib
-import os
 from io import StringIO
 
 import pandas as pd
 import requests
 from Bio import SeqIO
-from typing import List, Tuple
 from doc_writer import write_docx
-def compare(a, b):
-    res = f"{a} => {b}\n"
-    for i, s in enumerate(difflib.ndiff(a, b)):
-        if s[0] == ' ':
-            continue
-        elif s[0] == '-':
-            res += u'Delete "{}" from position {}\n'.format(s[-1], i)
-        elif s[0] == '+':
-            res += u'Add "{}" to position {}\n'.format(s[-1], i)
-    return res+"\n"
-
 
 def get_fasta(pdb_id):
     url = f"https://www.rcsb.org/fasta/entry/{pdb_id}"
@@ -51,13 +37,11 @@ def check_df(df_path):
         if row["sequence"] not in chain_data:
             errors.append((row['region_id'], (chain_data, row["sequence"])))
     name = df_path.split("/")[-1].replace(".csv", "")
-    write_docx(name + "_report.docx", errors, missing)
+    write_docx(name + "_report.docx", errors, missing, len(df))
 
 
 def main():
-    if not os.path.exists("./fasta"):
-        os.makedirs("./fasta")
-    check_df("class2.csv")
+    check_df("all_regions.csv")
 
 
 if __name__ == "__main__":
