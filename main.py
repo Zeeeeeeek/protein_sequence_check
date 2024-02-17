@@ -52,11 +52,6 @@ def check_df(df_path):
     write_docx(name + "_report.docx", errors)
 
 
-def filter_comparison(errors: List[Tuple[str, str, int]]):
-    expected_index = 0
-    to_remove = []
-
-
 def main():
     if not os.path.exists("./fasta"):
         os.makedirs("./fasta")
