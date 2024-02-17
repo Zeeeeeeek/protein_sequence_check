@@ -39,7 +39,7 @@ def get_chain_from_fasta(fasta_io, chain_id):
 
 
 def check_df(df_path):
-    df = pd.read_csv(df_path, usecols=["pdb_id", "pdb_chain", "sequence"])
+    df = pd.read_csv(df_path, usecols=["pdb_id", "pdb_chain", "sequence", "region_id"])
     errors = []
     for index, row in df.iterrows():
         fasta_io = get_fasta(row["pdb_id"])
@@ -47,7 +47,7 @@ def check_df(df_path):
         if chain_data is None:
             raise ValueError(f"Chain {row['pdb_chain']} not found in {row['pdb_id']}")
         if row["sequence"] not in chain_data:
-            errors.append((row["sequence"], chain_data))
+            errors.append((row['region_id'], (chain_data, row["sequence"])))
     name = df_path.split("/")[-1].replace(".csv", "")
     write_docx(name + "_report.docx", errors)
 
