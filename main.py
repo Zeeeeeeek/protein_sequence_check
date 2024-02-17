@@ -51,7 +51,7 @@ def check_df(df_path):
         if row["sequence"] not in chain_data:
             errors.append((row['region_id'], (chain_data, row["sequence"])))
     name = df_path.split("/")[-1].replace(".csv", "")
-    write_docx(name + "_report.docx", errors)
+    write_docx(name + "_report.docx", errors, missing)
 
 
 def main():
