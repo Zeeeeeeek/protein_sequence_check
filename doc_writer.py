@@ -83,13 +83,13 @@ def write_docx(path, errors: List[Tuple[str, Tuple[str, str]]], missing, df_len:
     if compare_errors:
         doc.add_heading('Comparison errors', level=2)
         for region_id in compare_errors:
-            p = doc.add_paragraph(region_id)
-            add_hyperlink(p, "Check PDB", f"https://repeatsdb.bio.unipd.it/structure/{region_id.split('_')[0]}")
+            p = doc.add_paragraph()
+            add_hyperlink(p, f"COMPARISON ERROR: {region_id}", f"https://repeatsdb.bio.unipd.it/structure/{region_id.split('_')[0]}")
     if missing:
         doc.add_heading('Missing chains', level=2)
         for m in missing:
-            p = doc.add_paragraph(m)
-            add_hyperlink(p, "Check PDB", f"https://repeatsdb.bio.unipd.it/structure/{m}")
+            p = doc.add_paragraph()
+            add_hyperlink(p, f"MISSING: {m}", f"https://repeatsdb.bio.unipd.it/structure/{m}")
     if errors or missing:
         doc.add_heading('Summary', level=2)
         if errors:

@@ -45,7 +45,7 @@ def main():
     if len(sys.argv) == 2:
         check_df(sys.argv[1])
     else:
-        check_df("all_regions.csv")
+        check_df("class2.csv")
 
 
 if __name__ == "__main__":
