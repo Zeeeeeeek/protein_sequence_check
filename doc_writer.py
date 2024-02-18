@@ -1,5 +1,5 @@
 import difflib
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 import docx
 from docx import Document
@@ -55,11 +55,32 @@ def compare2(a, b):
             res.append(('RED', s[-1]))
     return res
 
+def try_write_repeats_comparison(document: Document, region_id, repeats_regions: Dict[str, List[str]], b):
+    if repeats_regions and region_id in repeats_regions:
+        sequences = repeats_regions[region_id]
+        if b in sequences:
+            return True
+        if len(sequences) > 0:
+            sequences_str = "\n".join(sequences)
+            document.add_paragraph(f"RepeatsDB sequences:\n{sequences_str}")
+        for sequence in sequences:
+            comp = compare2(sequence, b)
+            paragraph = document.add_paragraph('\nComparison with RepeatsDB sequence:\n')
+            for color, c in comp:
+                run = paragraph.add_run(c)
+                if color.upper() == 'RED':
+                    run.font.color.rgb = RED
+                elif color.upper() == 'BLACK':
+                    run.font.color.rgb = BLACK
+            document.add_paragraph()
+        return False
 
-def write_docx(path, errors: List[Tuple[str, Tuple[str, str]]], missing, df_len: int):
+def write_docx(path, errors: List[Tuple[str, Tuple[str, str]]], missing, df_len: int,
+               repeats_regions: Dict[str, List[str]]):
     doc = Document()
     doc.add_heading('RepeatsDB Structure Checker', level=1)
-    compare_errors = []
+    compare_errors = set()
+    errors_that_match_with_repeats = set()
     for region_id, (a, b) in errors:
         h = doc.add_heading(level=3)
         add_hyperlink(h,
@@ -70,9 +91,15 @@ def write_docx(path, errors: List[Tuple[str, Tuple[str, str]]], missing, df_len:
         try:
             comparison = compare2(a, b)
         except Exception:
-            compare_errors.append(region_id)
-            continue
-        paragraph = doc.add_paragraph('\nComparison:\n')
+            try:
+                if try_write_repeats_comparison(doc, region_id.split('_')[0], repeats_regions, b):
+                    errors_that_match_with_repeats.add(region_id)
+                    doc.add_paragraph("Sequence matches with RepeatsDB sequence")
+            except Exception:
+                compare_errors.add(region_id)
+            finally:
+                continue
+        paragraph = doc.add_paragraph('\nComparison with fasta:\n')
         for color, c in comparison:
             run = paragraph.add_run(c)
             if color.upper() == 'RED':
@@ -80,11 +107,18 @@ def write_docx(path, errors: List[Tuple[str, Tuple[str, str]]], missing, df_len:
             elif color.upper() == 'BLACK':
                 run.font.color.rgb = BLACK
         doc.add_paragraph()
+        try:
+            if try_write_repeats_comparison(doc, region_id.split('_')[0], repeats_regions, b):
+                errors_that_match_with_repeats.add(region_id)
+                doc.add_paragraph("Sequence matches with RepeatsDB sequence")
+        except Exception:
+            continue
     if compare_errors:
         doc.add_heading('Comparison errors', level=2)
         for region_id in compare_errors:
             p = doc.add_paragraph()
-            add_hyperlink(p, f"COMPARISON ERROR: {region_id}", f"https://repeatsdb.bio.unipd.it/structure/{region_id.split('_')[0]}")
+            add_hyperlink(p, f"COMPARISON ERROR: {region_id}",
+                          f"https://repeatsdb.bio.unipd.it/structure/{region_id.split('_')[0]}")
     if missing:
         doc.add_heading('Missing chains', level=2)
         for m in missing:
@@ -95,7 +129,24 @@ def write_docx(path, errors: List[Tuple[str, Tuple[str, str]]], missing, df_len:
         if errors:
             doc.add_paragraph(f"Errors found: {len(errors)}")
             doc.add_paragraph(f"Errors percentage: {len(errors) / df_len * 100}%")
+            doc.add_paragraph(f"Errors that match with RepeatsDB: {len(errors_that_match_with_repeats)}")
+            doc.add_paragraph(f"Errors percentage that match with RepeatsDB: {len(errors_that_match_with_repeats) / len(errors) * 100}%")
         if missing:
             doc.add_paragraph(f"Missing chains: {len(missing)}")
             doc.add_paragraph(f"Missing chains percentage: {len(missing) / df_len * 100}%")
     doc.save(path)
+
+
+def load_regions_from_txt(path):
+    res = {}
+    with open(path, "r") as file:
+        lines = file.readlines()
+        key = ""
+        for line in lines:
+            if line.startswith("Region ID:"):
+                key = line.split(":")[1].strip()
+                res[key] = []
+            elif key and line.strip():
+                res[key].append(line.strip())
+    return res
+

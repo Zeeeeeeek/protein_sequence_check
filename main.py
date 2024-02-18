@@ -3,7 +3,7 @@ from io import StringIO
 import pandas as pd
 import requests
 from Bio import SeqIO
-from doc_writer import write_docx
+from doc_writer import write_docx, load_regions_from_txt
 import sys
 
 def get_fasta(pdb_id):
@@ -38,14 +38,14 @@ def check_df(df_path):
         if row["sequence"] not in chain_data:
             errors.append((row['region_id'], (chain_data, row["sequence"])))
     name = df_path.split("/")[-1].replace(".csv", "")
-    write_docx(name + "_report.docx", errors, missing, len(df))
+    write_docx(name + "_report.docx", errors, missing, len(df), load_regions_from_txt("sequence.txt"))
 
 
 def main():
-    if len(sys.argv) == 2:
-        check_df(sys.argv[1])
+    if len(sys.argv) < 2:
+        check_df("classi_report.csv")
     else:
-        check_df("class2.csv")
+        check_df(sys.argv[1])
 
 
 if __name__ == "__main__":
