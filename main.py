@@ -4,6 +4,7 @@ import pandas as pd
 import requests
 from Bio import SeqIO
 from doc_writer import write_docx
+import sys
 
 def get_fasta(pdb_id):
     url = f"https://www.rcsb.org/fasta/entry/{pdb_id}"
@@ -41,7 +42,10 @@ def check_df(df_path):
 
 
 def main():
-    check_df("all_regions.csv")
+    if len(sys.argv) == 2:
+        check_df(sys.argv[1])
+    else:
+        check_df("all_regions.csv")
 
 
 if __name__ == "__main__":
